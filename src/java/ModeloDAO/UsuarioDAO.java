@@ -5,56 +5,70 @@
  */
 package ModeloDAO;
 
+import ModeloVO.UsuarioVO;
 import Util.Conexion;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
  * @author emart
  */
-public class UsuarioDAO extends Conexion  {
-    
+public class UsuarioDAO {
+
     //1. Declarar Atributos y objetos
-    private Connection conexion;
-    private PreparedStatement puente;
-    private ResultSet mensajero;
-
-    private boolean operacion = false;
-    private String sql;
-
     private String email_usuario = "", nombre_usuario = "", contrasena = "", usuario = "";
     private int cedula_usuario = 0;
 
-    
-    public boolean iniciarSesion(String usuario, String contrasena) {
+    public UsuarioVO iniciarSesion(String usuario, String contrasena) {
+        UsuarioVO usu = null;
+        Connection cn = null;
+        PreparedStatement pstm = null;
+        ResultSet rs = null;
 
         try {
-            conexion = this.obtenerConexion();
-            sql = "select * from usuario where usuario=? and contrasena=?";
-            puente = conexion.prepareStatement(sql);
-            puente.setString(1, usuario);
-            puente.setString(2, contrasena);
-            mensajero = puente.executeQuery();
-            if (mensajero.next()) {
-                operacion = true;
+            Conexion con = new Conexion();
+            cn = con.obtenerConexion();
+            String sql = "SELECT * FROM usuarios Where usuario = ? AND contrasena = ?";
+            pstm = cn.prepareStatement(sql);
+            pstm.setString(1, usuario);
+            pstm.setString(2, contrasena);
+            rs = pstm.executeQuery();
+
+            while (rs.next()) {
+
+                usu = new UsuarioVO();
+                usu.setUsuario(rs.getString("usuario"));
+                usu.setContrasena(rs.getString("contrasena"));
+
             }
-        } catch (SQLException e) {
-            Logger.getLogger(UsuarioDAO.class.getName()).log(Level.SEVERE, null, e);
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
+
             try {
-                this.cerrarConexion();
-            } catch (SQLException e) {
-                Logger.getLogger(UsuarioDAO.class.getName()).log(Level.SEVERE, null, e);
+                if (rs != null) {
+                    rs.close();
+                }
+
+                if (pstm != null) {
+                    pstm.close();
+                }
+
+                if (cn != null) {
+                    cn.close();
+                }
+
+            } catch (Exception e2) {
+
+                e2.printStackTrace();
+
             }
+
         }
-        return operacion;
+        return usu;
+
     }
-    
-    
 }
