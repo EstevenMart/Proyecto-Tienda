@@ -5,8 +5,8 @@
  */
 package Controlador;
 
-import ModeloDAO.UsuarioDAO;
-import ModeloVO.UsuarioVO;
+import ModeloDAO.LoginDAO;
+import ModeloVO.LoginVO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.ServletException;
@@ -14,13 +14,14 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 /**
  *
  * @author emart
  */
 @WebServlet(name = "UsuariosServlet", urlPatterns = {"/UsuariosServlet"})
-public class UsuariosServlet extends HttpServlet {
+public class LoginServlet extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -34,21 +35,31 @@ public class UsuariosServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            String usuario = request.getParameter("usuario");
-            String contrasena = request.getParameter("contrasena");
 
-            UsuarioDAO modelo = new UsuarioDAO();
-            UsuarioVO usua = modelo.iniciarSesion(usuario, contrasena);
+        String usuario = request.getParameter("usuario");
+        String contrasena = request.getParameter("contrasena");
+        int opcion = Integer.parseInt(request.getParameter("opcion"));
 
-            if (usuario == null) {
-                request.setAttribute("mensaje", "Error en nombre de usuario y/o clave");
-                request.getRequestDispatcher("index.jsp").forward(request, response);
-            } else {
-                request.setAttribute("mensaje", "Ingresado correctamente");
-                response.sendRedirect("menu.jsp");
-            }
+        LoginVO logVO = new LoginVO(usuario, contrasena);
+        LoginDAO logDAO = new LoginDAO(logVO);
+
+        switch (opcion) {
+
+            case 1:
+
+                if (logDAO.iniciarSesion(usuario, contrasena)) {
+                    HttpSession miSesion = request.getSession(true);
+
+                    logVO = new LoginVO(usuario, contrasena);
+                    miSesion.setAttribute("datos", logVO);
+                    request.getRequestDispatcher("menu.jsp").forward(request, response);
+
+                } else {
+                    request.setAttribute("mensajeError", "Datos de inicio de sesion incorrectos");
+                    request.getRequestDispatcher("index.jsp").forward(request, response);
+                }
+
+                break;
         }
     }
-
 }
